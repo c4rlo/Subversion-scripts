@@ -1,0 +1,28 @@
+#!/usr/bin/python
+
+# This is a simple wrapper intended for use with the --diff-cmd argument of
+# 'svn diff' (or indeed 'svndiff') and uses gvimiff as the diffing tool.
+# It makes Vim name the buffers according to what Subversion passes in
+# as the names for the files. This may look like
+#   file.c	(.../trunk/file.c)	(revision 72)
+# Note the tabs and slashes. Both confuse Vim, so we replace whitespace by
+# regular spaces and slashes by backslashes.
+# The easiest way to use this script is by setting
+#   diff-cmd = svndiff_helper
+# in section [helpers] in your ~/.subversion/config.
+
+import sys, re, subprocess
+
+def sanitise(fn):
+    fn = re.sub(r'\s+', r'\ ', fn)
+    fn = re.sub(r'/',   r'\\\\', fn)
+    return fn
+
+n1, n2 = sanitise(sys.argv[3]), sanitise(sys.argv[5])
+f1, f2 = sys.argv[6], sys.argv[7]
+
+sys.exit(subprocess.call(['vim', '-dfgR',
+    '--cmd', "au BufReadPost " + f1 + " f " + n1,
+    '--cmd', "au BufReadPost " + f2 + " f " + n2,
+    f1, f2]))
+

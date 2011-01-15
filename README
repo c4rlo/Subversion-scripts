@@ -1,0 +1,14 @@
+* 'svndiff' can be used much like 'svn diff', except it adds a new
+  revision specifier 'BRANCHPT' (or 'BRPT') which refers to the revision
+  just before the file was branched off (copied, more precisely).
+  Use this for seeing all changes in the current branch so far for a given
+  file.
+* 'svndiff_helper' is intended for use with the --diff-cmd argument of
+  'svn diff' (or indeed 'svndiff') and uses gvimdiff as the diffing tool.
+  The feature it adds beyond the more trivial wrapper script everybody uses
+  for this is that it names the buffer according to what svn tells it --
+  so Vim displays it as "file.c (revision 44)" instead of "tmpfile.tmp".
+  The easiest way of using it is by setting
+    diff-cmd = svndiff_helper
+  in section [helpers] in your ~/.subversion/config.
+

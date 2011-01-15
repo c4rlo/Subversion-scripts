@@ -1,0 +1,69 @@
+#!/usr/bin/python
+
+# Use this script just as you would 'svn diff'.
+# The benefit is that it understands one extra revision specifier:
+# BRANCHPT aka BRPT. For a file that was branched off (or "svn copied"),
+# this refers to the revision immediately prior to the copy.
+# This makes for a convenient way to see all the changes that have
+# happened in the branch so far.
+
+import sys, subprocess
+
+def calc_trunk_rev(filename):
+    svnlog = subprocess.Popen(["svn", "log", "-q", "--stop-on-copy",
+        "-r0:HEAD", "-l1", filename], stdout=subprocess.PIPE)
+    out, err = svnlog.communicate()
+    for line in out.splitlines():
+        if len(line) > 1 and line[0] == 'r':
+            return str(int(line[1:].split()[0]) - 1)
+    sys.exit("unable to calculate revision number for 'BRANCHPT'")
+
+# Parse arguments. We cannot use getopt since we must pass through unknown arguments.
+
+opts = []
+files = []
+rev_idx = None
+in_files = False
+
+for arg in sys.argv[1:]:
+    if arg.startswith('-r') or arg.startswith('-c'):
+        if rev_idx is not None:
+            sys.exit("-c or -r must not be specified more than once")
+        if len(arg) > 2:
+            opts.append(arg[:2])
+            rev_idx = len(opts)
+            opts.append(arg[2:])
+        else:
+            opts.append(arg)
+            rev_idx = len(opts)
+    elif in_files:
+        files.append(arg)
+    elif rev_idx == len(opts):
+        opts.append(arg)
+    elif not arg.startswith('-'):
+        in_files = True
+        files.append(arg)
+    else:
+        opts.append(arg)
+        if arg == '--': in_files = True
+
+if rev_idx is not None:
+    if rev_idx >= len(opts):
+        sys.exit("missing argument for -r or -c option")
+    revs = opts[rev_idx].split(':')
+    if 'BRANCHPT' in revs or 'BRPT' in revs:
+        if len(files) != 1:
+            sys.exit("must specify exactly one file when using 'BRANCHPT'")
+        t_rev = calc_trunk_rev(files[0])
+        for i, r in enumerate(revs):
+            if r in ('BRANCHPT', 'BRPT'): revs[i] = t_rev
+        opts[rev_idx] = ':'.join(revs)
+
+cmd = ["svn", "diff"]
+cmd.extend(opts)
+cmd.extend(files)
+
+print ' '.join(cmd)
+
+sys.exit(subprocess.call(cmd))
+
