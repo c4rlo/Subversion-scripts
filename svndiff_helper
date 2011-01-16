@@ -19,10 +19,9 @@ n1, n2 = sys.argv[3], sys.argv[5]
 f1, f2 = sys.argv[6], sys.argv[7]
 
 def lntemp(f, n):
-    if 'tmp' not in f: return f
     fn = n.split('\t')[0]
     ext = os.path.splitext(fn)[1]
-    if ext:
+    if ext != os.path.splitext(f)[1]:
         tmpfn = f + ext
         os.symlink(os.path.basename(f), tmpfn)
         return tmpfn
