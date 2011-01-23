@@ -1,0 +1,73 @@
+#!/usr/bin/python
+
+import sys, getopt, subprocess, readline, os, os.path, shutil
+
+def usage(errstr=None, help=False):
+    if errstr: print errstr
+    print "usage: %s [-i] [-f] [-q] [-h|-?|--help]" % sys.argv[0]
+    if help:
+        print """
+Recursively cleans the current svn working copy starting from the current
+directory.  It does this by inspecting the output of `svn status'.  Options:
+
+    -i  Also remove files ignored by SVN (e.g. via svn:ignore properties)
+    -f  Do not confirm deletion
+    -q  Do not list every file before deletion, only print number of affected
+        files
+
+    -h, -?, --help  This help
+"""
+    sys.exit(0 if help else -1)
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "ifqh?", ['help'])
+except getopt.GetoptError, e: usage(str(e))
+
+if len(args) > 0: usage()
+
+opt = frozenset([ o[0] for o in opts ])
+
+if not opt.isdisjoint(frozenset(('-h', '-?', '--help'))):
+    usage(help=True)
+
+cmd = ['svn', 'status']
+if '-i' in opt: cmd.append('--no-ignore')
+
+svn = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+out, err = svn.communicate()
+
+if err or svn.returncode != 0: sys.exit(svn.returncode)
+
+paths = [ line[8:] for line in out.splitlines() if line[0] in "?I" ]
+
+if len(paths) == 0:
+    if '-q' not in opt: print "No files found"
+    sys.exit()
+
+def isdir(path):
+    return os.path.isdir(path) and not os.path.islink(path)
+
+verb = 'being' if '-f' in opt else 'to be'
+if '-q' in opt:
+    print "%d files/directories are %s deleted." % (len(paths), verb)
+else:
+    print "Files/directories %s deleted:" % verb
+    for path in paths: print " ", path + \
+            ('/' if isdir(path) else '')
+
+def reply_is(reply, target):
+    return isinstance(reply, str) and \
+            len(reply) > 0 and \
+            target.startswith(reply.lower())
+
+confirmed = True if '-f' in opt else None
+while confirmed is None:
+    reply = raw_input("Continue? [yn] ")
+    if reply_is(reply, "yes"): confirmed = True
+    elif reply_is(reply, "no"): confirmed = False
+
+if confirmed:
+    for path in paths:
+        if isdir(path): shutil.rmtree(path)
+        else: os.remove(path)
+
