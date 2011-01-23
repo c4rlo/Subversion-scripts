@@ -11,4 +11,11 @@
   The easiest way of using it is by setting
     diff-cmd = svndiff_helper
   in section [helpers] in your ~/.subversion/config.
+* 'svnclean' deletes all files not tracked by SVN - these are the ones
+  marked with a '?' in the output of 'svn status'. It optionally also
+  includes files ignored by SVN - the ones marked 'I' in the output of
+  'svn status'. It lists files before deleting them, and prompts for
+  confirmation, although both behaviours can be turned off with switches.
+
+For more information, see my blog: http://carlo-notes.blogspot.com/
 

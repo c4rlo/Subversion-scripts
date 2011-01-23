@@ -25,7 +25,7 @@ except getopt.GetoptError, e: usage(str(e))
 
 if len(args) > 0: usage()
 
-opt = frozenset([ o[0] for o in opts ])
+opt = frozenset([ opt[0] for opt in opts ])
 
 if not opt.isdisjoint(frozenset(('-h', '-?', '--help'))):
     usage(help=True)
