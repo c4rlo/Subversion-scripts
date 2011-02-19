@@ -36,8 +36,8 @@ def sanitise(n):
     return n
 
 vim_rc = subprocess.call(['vim', '-dfgR',
-    '--cmd', "au BufReadPost " + lf1 + " f " + sanitise(n1),
-    '--cmd', "au BufReadPost " + lf2 + " f " + sanitise(n2),
+    '--cmd', "au BufReadPost " + lf1 + " silent f " + sanitise(n1),
+    '--cmd', "au BufReadPost " + lf2 + " silent f " + sanitise(n2),
     lf1, lf2])
 
 if lf1 != f1: os.remove(lf1)
