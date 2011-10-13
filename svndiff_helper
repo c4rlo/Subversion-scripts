@@ -23,7 +23,8 @@ def lntemp(f, n):
     ext = os.path.splitext(fn)[1]
     if ext not in ("", os.path.splitext(f)[1]):
         tmpfn = f + ext
-        os.symlink(os.path.basename(f), tmpfn)
+        if (os.path.isfile(tmpfn) is False):
+            os.symlink(os.path.basename(f), tmpfn)
         return tmpfn
     else: return f
 
